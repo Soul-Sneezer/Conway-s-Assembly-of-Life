@@ -12,28 +12,32 @@ main:
 read_input:
 	mov $3, %eax
 	xor %ebx, %ebx
-	lea n, %ecx
+	lea arguments, %ecx
 	mov $1024, %edx
 	int $0x80
 
-	mov $2, %edi
-	movb (%ecx, %edi, 1), %al
-	sub $51, %eax
-	/*
-get_values:
-	cmp $0, %esi
-	je initialize_list
-	dec %esi
-	lea arguments, %edi
-
-	lea (%edi, %esi, 1), %ebx
-	int $0x80
-
-	cmp $0, %esi
-	jne read_arguments
-
-	lea k, %ebx
-	int $0x80
+	//mov $28, %edi
+	//movb (%ecx, %edi, 1), %al
+parse_values: // the last char is a line feed(ascii value 10)
+							// space is 32
+	lea n, %ebp
+	mov $0, %ebx
+	mov $0, %edi
+	cmp $10, (%ecx, %edi, 1)
+	je initialize_matrix
+	cmp $32, (%ecx, %edi, 1)
+	je found_whitespace
+char_to_value:
+	movb (%ecx, %edi, 1), %dl
+	sub $48, %edx
+	mov (%ebp, %ebx, 1), %eax
+	mul $10, %eax
+	add %edx, %eax
+	mov %eax, (%ebp, %ebx, 1)
+found_whitespace:
+	inc %ebx	
+	jmp parse_values
+/*
 initialize_matrix:
 	mov n, %eax
 	mul m
@@ -49,6 +53,7 @@ initialize_matrix:
 execute_evolution:
 
 print_matrix:
+value_to_char:
 	dec %esi
 	mov $4, %eax
 	mov $1, %ebx
