@@ -1,9 +1,9 @@
 .data
 arguments: .space 1024
-n: .space 1
-m: .space 1
-p: .space 1
-k: .space 1
+n: .space 4
+m: .space 4
+p: .space 4
+k: .space 4
 matrix: .space 400
 .text
 .global main
@@ -18,33 +18,33 @@ read_input:
 
 	lea n, %ebp									# the variables are sequential in memory(I believe), so I get the address of the first one
 	xor %eax, %eax						# reset eax
-	xor %ebx, %ebx						# reset ebx
 	xor %edi, %edi						# reset edi
 	xor %edx, %edx
-	
+
 parse_values:
-	mov (%ecx, %edi, 1), %esi
-	mov 1(%ecx, %edi, 1), %edx
-	cmp $0, %edx							# compare the argument[%edi] to 0(null), if true jump
+	xor %edx, %edx
+	movb (%ecx, %edi, 1), %dl
+	cmp $0, %dl							# compare the argument[%edi] to 0(null), if true jump
 	je initialize_matrix			# to initialize matrix
-	cmp $3, %edx
+	cmp $3, %dl
 	je initialize_matrix
-	cmp $10, %esi							# compare the argument[%edi] to 10(value line feed), if true jump
+	cmp $10, %dl							# compare the argument[%edi] to 10(value line feed), if true jump
 	je found_whitespace
-	cmp $32, %esi
+	cmp $32, %dl
 	je found_whitespace				# to found_whitespace
 char_to_value:							# convert from char to a digit
+	mov $10, %edx
+	mul %edx
 	xor %edx, %edx
-	movb (%ecx, %edi, 1), %dl	# move byte from argument[%edi], to %dl
-	sub $48, %edx							# subtract 48(value of '0' in ascii) to get the digit
-	mov $10, %esi
-	mul %esi										# shift eax to the right(in decimal) and add the new digit
-	add %edx, %eax
+	movb (%ecx, %edi, 1), %dl
+	sub $48, %dl							# subtract 48(value of '0' in ascii) to get the digit
+	add %dl, %al
 	inc %edi
 	jmp parse_values
 found_whitespace:
-	mov %eax, (%ebp, %ebx, 1) # move the value from eax back to the variable
+	mov %al, (%ebp, %ebx, 4) # move the value from eax back to the variable
 	xor %eax, %eax						# reset value in eax
+	inc %edi
 	inc %ebx									# go to the next variable byte	
 	jmp parse_values					# loop
 initialize_matrix:
