@@ -1,44 +1,46 @@
 .data
+arguments: .space 1024
 n: .space 1
 m: .space 1
 p: .space 1
 k: .space 1
-arguments: .space 1024
 matrix: .space 400
 .text
 .global main
 main:
 
 read_input:
-	mov $3, %eax
-	xor %ebx, %ebx
-	lea arguments, %ecx
-	mov $1024, %edx
-	int $0x80
+	mov $3, %eax				# argument for read
+	xor %ebx, %ebx			# read from stdin
+	lea arguments, %ecx	# into buffer named arguments
+	mov $1024, %edx			# max size of buffer is 1024 bytes
+	int $0x80						# syscall
 
-	//mov $28, %edi
-	//movb (%ecx, %edi, 1), %al
-parse_values: // the last char is a line feed(ascii value 10)
-							// space is 32
-	lea n, %ebp
-	mov $0, %ebx
-	mov $0, %edi
-	cmp $10, (%ecx, %edi, 1)
-	je initialize_matrix
-	cmp $32, (%ecx, %edi, 1)
-	je found_whitespace
-char_to_value:
-	movb (%ecx, %edi, 1), %dl
-	sub $48, %edx
-	mov (%ebp, %ebx, 1), %eax
-	mul $10, %eax
+	lea n, %ebp									# the variables are sequential in memory(I believe), so I get the address of the first one
+	xor %eax, %eax						# reset eax
+	xor %ebx, %ebx						# reset ebx
+	xor %edi, %edi						# reset edi
+
+parse_values: # the last char is a line feed(ascii value 10)
+							# space is 32
+	mov (%ecx, %edi, 1), %esi
+	cmp $0, %esi							# compare the argument[%edi] to 10(value for line feed), if true jump
+	je initialize_matrix			# to initialize matrix
+	cmp $10, %esi							# compare the argument[%edi] to 32(value for whitespace), if true jump
+	je found_whitespace				# to found_whitespace
+char_to_value:							# convert from char to a digit
+	movb (%ecx, %edi, 1), %dl	# move byte from argument[%edi], to %dl
+	sub $48, %edx							# subtract 48(value of '0' in ascii) to get the digit
+	mov $10, %esi
+	mul %esi										# shift eax to the right(in decimal) and add the new digit
 	add %edx, %eax
-	mov %eax, (%ebp, %ebx, 1)
 found_whitespace:
-	inc %ebx	
-	jmp parse_values
-/*
+	mov %eax, (%ebp, %ebx, 1) # move the value from eax back to the variable
+	xor %eax, %eax							# reset value in eax
+	inc %ebx									# go to the next variable byte	
+	jmp parse_values					# loop
 initialize_matrix:
+/*
 	mov n, %eax
 	mul m
 	dec %eax
@@ -54,15 +56,14 @@ execute_evolution:
 
 print_matrix:
 value_to_char:
-	dec %esi
+print_arguments:
+	mov $0, %esi
 	mov $4, %eax
 	mov $1, %ebx
-	mov (%edi, %esi, 1), %ecx
-	mov $1, %edx
+	lea arguments, %ecx
+	mov $1024, %edx
 	int $0x80
-	cmp $0, %esi
-	jne print_list
-	*/
+*/
 end_program:
 	mov $1, %eax
 	xor %ebx, %ebx
