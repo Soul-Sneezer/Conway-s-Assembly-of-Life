@@ -20,23 +20,31 @@ read_input:
 	xor %eax, %eax						# reset eax
 	xor %ebx, %ebx						# reset ebx
 	xor %edi, %edi						# reset edi
-
-parse_values: # the last char is a line feed(ascii value 10)
-							# space is 32
+	xor %edx, %edx
+	
+parse_values:
 	mov (%ecx, %edi, 1), %esi
-	cmp $0, %esi							# compare the argument[%edi] to 10(value for line feed), if true jump
+	mov 1(%ecx, %edi, 1), %edx
+	cmp $0, %edx							# compare the argument[%edi] to 0(null), if true jump
 	je initialize_matrix			# to initialize matrix
-	cmp $10, %esi							# compare the argument[%edi] to 32(value for whitespace), if true jump
+	cmp $3, %edx
+	je initialize_matrix
+	cmp $10, %esi							# compare the argument[%edi] to 10(value line feed), if true jump
+	je found_whitespace
+	cmp $32, %esi
 	je found_whitespace				# to found_whitespace
 char_to_value:							# convert from char to a digit
+	xor %edx, %edx
 	movb (%ecx, %edi, 1), %dl	# move byte from argument[%edi], to %dl
 	sub $48, %edx							# subtract 48(value of '0' in ascii) to get the digit
 	mov $10, %esi
 	mul %esi										# shift eax to the right(in decimal) and add the new digit
 	add %edx, %eax
+	inc %edi
+	jmp parse_values
 found_whitespace:
 	mov %eax, (%ebp, %ebx, 1) # move the value from eax back to the variable
-	xor %eax, %eax							# reset value in eax
+	xor %eax, %eax						# reset value in eax
 	inc %ebx									# go to the next variable byte	
 	jmp parse_values					# loop
 initialize_matrix:
