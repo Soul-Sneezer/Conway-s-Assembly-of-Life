@@ -51,9 +51,11 @@ found_whitespace:
 create_matrix:
 	mov n, %eax
 	mul m											# get number of elements in matrix
+	lea matrix_copy, %ecx
 	lea matrix, %ebp					# get address of matrix
 initialize_matrix:
 	dec %eax									# start from the end of the matrix(easier this way)
+	mov $0, (%ecx, %eax, 4)
 	mov $0, (%ebp, %eax, 4)		# set value at index %eax to 0
 	cmp $0, %eax							# if eax is 0 stop loop
 	jne initialize_matrix			# else continue
@@ -79,9 +81,12 @@ execute_evolutions:						#
 	mov (%ebp, %edi, 4), %edx
 	mov %edx, k
 	lea matrix, %ebp
+#	lea matrix_copy, might not be necessary :o
+execute_evolution:
+	cmp $0, k
+	je print_matrix 
 	mov $1, %ecx
 	mov $1, %ebx
-execute_evolution:
 	mov $0, %eax
 	mov m, %ecx
 	inc %ecx
@@ -89,14 +94,15 @@ execute_evolution:
 	inc %edx
 change_row:
 	inc %eax
-	cmp %eax, %edx
-	je print_matrix
+	cmp n, %eax
+	jg copy_matrix
 	mov $0, %ebx
 change_column:
 	inc %ebx
-	cmp %ebx, %ecx
-	je change_row
+	cmp m, %ebx
+	jg change_row
 traverse_neighbors:
+	xor %edx, %edx
 	push %eax
 	push %ebx
 	dec %eax
@@ -104,68 +110,96 @@ traverse_neighbors:
 	add %ebx, %eax
 	dec %eax
 	cmp (%ebp, %eax, 4), $1
-	je increment_esi1
+	je increment_edx1
 jump_back1:
 	inc %eax
 	cmp (%ebp, %eax, 4), $1
-	je increment_esi2
+	je increment_edx2
 jump_back2:
 	inc %eax
 	cmp (%ebp, %eax, 4), $1
-	je increment_esi3
+	je increment_edx3
 jump_back3:
 	add m, %eax
 	cmp (%ebx, %eax, 4), $1
-	je increment_esi4
+	je increment_edx4
 jump_back4:
 	dec %eax
 	cmp (%ebx, %eax, 4), $1
-	je increment_esi5
+	je increment_edx5
 jump_back5:
 	dec %eax
 	cmp (%ebx, %eax, 4), $1
-	je increment_esi6
+	je increment_edx6
 jump_back6:
 	add m, %eax
 	cmp (%ebx, %eax, 4), $1
-	je increment_esi7
+	je increment_edx7
 jump_back7:
 	inc %eax
 	cmp (%ebx, %eax, 4), $1
-	je increment_esi8
+	je increment_edx8
 jump_back8:
 	inc %eax
 	cmp (%ebx, %eax, 4), $1
-	je increment_esi9
+	je increment_edx9
 jump_back9:
+	sub m, %eax
+	dec %eax
+	cmp %esi, 3 # cell should be alive
+	je alive
+	cmp %esi, 2	# cell should be dead :0
+	je alive
+	jmp dead
+alive:
+	mov $1, 1600(%ebp, %eax, 4)
+	pop %ebx
+	pop %eax
 	jmp change_column
-increment_esi1:
+dead:
+	mov $0, 1600(%ebp, %eax, 4)
+	pop %ebx
+	pop %eax
+	jmp change_column
+increment_edx1:
 	inc %esi
 	jmp jump_back1
-increment_esi2:
+increment_edx2:
 	inc %esi
 	jmp jump_back2
-increment_esi3:
+increment_edx3:
 	inc %esi
 	jmp jump_back3
-increment_esi4:
+increment_edx4:
 	inc %esi
 	jmp jump_back4
-increment_esi5:
+increment_edx5:
 	inc %esi
 	jmp jump_back5
-increment_esi6:
+increment_edx6:
 	inc %esi
 	jmp jump_back6
-increment_esi7:
+increment_edx7:
 	inc %esi
 	jmp jump_back7
-increment_esi8:
+increment_edx8:
 	inc %esi
 	jmp jump_back8
-increment_esi9:
+increment_edx9:
 	inc %esi
 	jmp jump_back9
+copy_matrix:
+	mov n, %eax
+	mov m, %ebx
+	inc %eax
+	inc %ebx
+	mul %ebx
+	mov $0, %ebx
+	cmp %ebx, %eax
+	je execute_evolution
+	mov 1600(%ebp, %eax, 4), (%ebp, %eax, 4)
+	inc %ebx
+	jmp copy_matrix
 print_matrix:
 value_to_char:
 	mov $2, %ebx/*	
