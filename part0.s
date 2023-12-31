@@ -1,12 +1,12 @@
 .data
 arguments: .space 1024
-n: .space 1
-m: .space 1
-p: .space 1
-list: .space 512
-k: .space 1
-matrix: .space 400
-matrix_copy: .space 400
+n: .space 4
+m: .space 4
+p: .space 4
+list: .space 2048
+k: .space 4
+matrix: .space 1600
+matrix_copy: .space 1600
 .text
 .global main
 main:
@@ -42,33 +42,72 @@ char_to_value:							# convert from char to a digit
 	inc %edi									# get to next char
 	jmp parse_values					# loop
 found_whitespace:
-	mov %al, (%ebp, %ebx, 1) 	# move the value from eax back to the variable
+	mov %al, (%ebp, %ebx, 4) 	# move the value from eax back to the variable
 	xor %eax, %eax						# reset value in eax
 	inc %edi									# get to next char
 	inc %ebx									# go to the next variable byte	
 	jmp parse_values					# loop
 create_matrix:
 	mov n, %eax
-	mul m
+	mul m											# get number of elements in matrix
+	lea matrix, %ebp					# get address of matrix
 initialize_matrix:
-	dec %eax
-	lea matrix, %edi
-	mov $0, (%edi, %eax, 4)
-	cmp $0, %eax
-	jne initialize_matrix
-/*
+	dec %eax									# start from the end of the matrix(easier this way)
+	mov $0, (%ebp, %eax, 4)		# set value at index %eax to 0
+	cmp $0, %eax							# if eax is 0 stop loop
+	jne initialize_matrix			# else continue
+	lea list, %ebp						# get list of coordinates
+	lea matrix, %esi					# get matrix
+	mov p, %ebx								# get p(number of coordinates) into %ebx
+	mov $0, %edi							# reset %edi
+set_ones:
+	cmp $0, %ebx							# if %ebx is 0 go
+	je execute_evolutions			# to execute_evolution
+	mov (%ebp, %edi, 4), %eax	# else move the first coord into %eax
+	mov 4(%ebp, %edi, 4), %ecx	# the second one into %ecx
+	inc %eax										# this is for padding
+	inc %ecx										# this is for padding
+	inc %edi										#inc %edi twice to get the next pair of coordinates
+	inc %edi
+	mul m												# mul row number by elements per row to get the proper index
+	add %ecx, %eax							# y * m + x
+	mov $1, (%esi, %eax, 4)			# set to one
+	dec %ebx										# one less set of coordinates
+	jmp set_ones								# loop
+execute_evolutions:						# 
+	mov (%ebp, %edi, 4), %edx
+	mov %edx, k
+	lea matrix, %ebp
+	mov $1, %ecx
+	mov $1, %ebx
 execute_evolution:
-
+	mov $1, %eax
+	mov m, %ecx
+	inc %ecx
+	mov n, %edx
+	inc %edx
+change_row:
+	cmp %eax, %edx
+	je print_matrix
+	mov $1, %ebx
+chance_column:
+	cmp %ebx, %ecx
+	je change_row
+traverse_neighbors:
+	mov $0, %esi
+	
+	inc %ebx
+	
 print_matrix:
 value_to_char:
+	mov $2, %ebx/*	
 print_arguments:
-	mov $0, %esi
 	mov $4, %eax
 	mov $1, %ebx
 	lea arguments, %ecx
-	mov $1024, %edx
+	mov $1600, %edx
 	int $0x80
-*/
+	*/
 end_program:
 	mov $1, %eax
 	xor %ebx, %ebx
