@@ -78,139 +78,128 @@ set_ones:
 	dec %ebx										# one less set of coordinates
 	jmp set_ones								# loop
 execute_evolutions:						# 
-	mov (%ebp, %edi, 4), %edx
-	mov %edx, k
-	lea matrix, %ebp
+	mov (%ebp, %edi, 4), %edx		# moves the last element in the list into %edx
+	mov %edx, k									# that element has the value of k		
+	lea matrix, %ebp						# load address of matrix into ebp
 #	lea matrix_copy, might not be necessary :o
 execute_evolution:
-	cmp $0, k
-	je print_matrix 
-	mov $1, %ecx
-	mov $1, %ebx
-	mov $0, %eax
-	mov m, %ecx
-	inc %ecx
-	mov n, %edx
-	inc %edx
+	cmp $0, k									  # if k is 0 there are no evolutions left
+	je print_matrix 						# then print the matrix
+	dec k												# decrement k
+	#mov $1, %ecx
+	xor %eax, %eax							# reset eax
 change_row:
-	inc %eax
-	cmp n, %eax
-	jg copy_matrix
-	mov $0, %ebx
+	inc %eax										# the index starts at 1 because at 0 we have the padding
+	cmp n, %eax									# compare n to the index
+	jg copy_matrix							# if the index is greater, we are done, move the values in the copy to the actual matrix
+	mov $0, %ebx								# reset %ebx							
 change_column:
-	inc %ebx
-	cmp m, %ebx
-	jg change_row
+	inc %ebx										# the index starts at 1 because at 0 we have the padding
+	cmp m, %ebx									# compare m to the index
+	jg change_row								# if the index is greater, we are done on this row
 traverse_neighbors:
-	xor %edx, %edx
-	push %eax
-	push %ebx
-	dec %eax
-	mul m
-	add %ebx, %eax
-	dec %eax
-	cmp (%ebp, %eax, 4), $1
-	je increment_edx1
-jump_back1:
-	inc %eax
-	cmp (%ebp, %eax, 4), $1
-	je increment_edx2
-jump_back2:
-	inc %eax
-	cmp (%ebp, %eax, 4), $1
-	je increment_edx3
-jump_back3:
-	add m, %eax
-	cmp (%ebx, %eax, 4), $1
-	je increment_edx4
-jump_back4:
-	dec %eax
-	cmp (%ebx, %eax, 4), $1
-	je increment_edx5
-jump_back5:
-	dec %eax
-	cmp (%ebx, %eax, 4), $1
-	je increment_edx6
-jump_back6:
-	add m, %eax
-	cmp (%ebx, %eax, 4), $1
-	je increment_edx7
-jump_back7:
-	inc %eax
-	cmp (%ebx, %eax, 4), $1
-	je increment_edx8
-jump_back8:
-	inc %eax
-	cmp (%ebx, %eax, 4), $1
-	je increment_edx9
-jump_back9:
-	sub m, %eax
-	dec %eax
-	cmp %esi, 3 # cell should be alive
+	xor %edx, %edx							# reset %edx
+	push %eax										# push %eax to the stack because we'll be using it for other things for now
+	push %ebx										# push %ebx to the stack because we'll be using it for other things for now
+	dec %eax										# decrement eax because we start at row y - 1 where y is the row number of the current element
+	mul m												# multiply by m to get the index in the sequential list
+	add %ebx, %eax							# add column index to get the proper element
+	dec %eax										# decrement to start in the corner
+	cmp (%ebp, %eax, 4), $1			# compare the element in the corner to 1
+	je increment_edx1						# if it's 1, increment %edx
+jump_back1:										# this is where we jump back from increment_edx1
+	inc %eax										# get the next element on the row
+	cmp (%ebp, %eax, 4), $1			# compare it to 1
+	je increment_edx2						# if 1, increment $edx
+jump_back2:										# jump back from increment_edx2
+	inc %eax										# next element on the row
+	cmp (%ebp, %eax, 4), $1			# compare to 1
+	je increment_edx3						# if 1, increment
+jump_back3:										# jump back
+	add m, %eax									# get the next row, but start at the end
+	cmp (%ebx, %eax, 4), $1			# compare to 1
+	je increment_edx4						# if 1, increment
+jump_back4:										# jump back
+	dec %eax										# get the element before now
+	cmp (%ebx, %eax, 4), $1			# compare
+	je increment_edx5						# increment
+jump_back5:										# jump back
+	dec %eax										# element from before
+	cmp (%ebx, %eax, 4), $1			# compare
+	je increment_edx6						# increment
+jump_back6:										# jump back
+	add m, %eax									# get to the next row, this time from the beginning
+	cmp (%ebx, %eax, 4), $1			# compare
+	je increment_edx7						# increment
+jump_back7:										# jump
+	inc %eax										# get to the next element on the row
+	cmp (%ebx, %eax, 4), $1			# compare
+	je increment_edx8						# increment
+jump_back8:										# jump
+	inc %eax										# next element
+	cmp (%ebx, %eax, 4), $1			# compare
+	je increment_edx9						# increment
+jump_back9:										# jump back
+	sub m, %eax									# get to the middle row
+	dec %eax										# middle column, where the current element is
+	cmp %edx, 3 # cell should be alive
 	je alive
-	cmp %esi, 2	# cell should be dead :0
+	cmp %edx, 2	# cell should be alive :0
 	je alive
-	jmp dead
+	jmp dead		# otherwise it's dead
 alive:
-	mov $1, 1600(%ebp, %eax, 4)
-	pop %ebx
-	pop %eax
-	jmp change_column
+	mov $1, 1600(%ebp, %eax, 4) # move $1, into the copy, at the index of the current one
+	pop %ebx										# get %ebx back
+	pop %eax										# get %eax back
+	jmp change_column						# go to the next element
 dead:
-	mov $0, 1600(%ebp, %eax, 4)
-	pop %ebx
-	pop %eax
-	jmp change_column
+	mov $0, 1600(%ebp, %eax, 4)	# move $0, into the copy, at the index of the current one
+	pop %ebx										# get %ebx back
+	pop %eax										# get %eax back
+	jmp change_column						# go to the next element
 increment_edx1:
-	inc %esi
+	inc %edx
 	jmp jump_back1
 increment_edx2:
-	inc %esi
+	inc %edx
 	jmp jump_back2
 increment_edx3:
-	inc %esi
+	inc %edx
 	jmp jump_back3
 increment_edx4:
-	inc %esi
+	inc %edx
 	jmp jump_back4
 increment_edx5:
-	inc %esi
+	inc %edx
 	jmp jump_back5
 increment_edx6:
-	inc %esi
+	inc %edx
 	jmp jump_back6
 increment_edx7:
-	inc %esi
+	inc %edx
 	jmp jump_back7
 increment_edx8:
-	inc %esi
+	inc %edx
 	jmp jump_back8
 increment_edx9:
-	inc %esi
+	inc %edx
 	jmp jump_back9
-copy_matrix:
-	mov n, %eax
+copy_matrix:					# get the values from matrix_copy into matrix
+	mov n, %eax					
 	mov m, %ebx
 	inc %eax
 	inc %ebx
-	mul %ebx
-	mov $0, %ebx
-	cmp %ebx, %eax
-	je execute_evolution
-	mov 1600(%ebp, %eax, 4), (%ebp, %eax, 4)
-	inc %ebx
-	jmp copy_matrix
-print_matrix:
-value_to_char:
-	mov $2, %ebx/*	
-print_arguments:
-	mov $4, %eax
-	mov $1, %ebx
-	lea arguments, %ecx
-	mov $1600, %edx
-	int $0x80
-	*/
-end_program:
+	mul %ebx						# stores into %eax the number of elements we need to go through
+	mov $0, %ebx				# index of current element
+copy_matrix_loop:	
+	cmp %ebx, %eax			# if is at end
+	je execute_evolution	# execute next_evolution
+	mov 1600(%ebp, %eax, 4), (%ebp, %eax, 4) # else, move the value of copy into the original
+	inc %ebx																	# go to the next element
+	jmp copy_matrix_loop											# repeat
+print_matrix:																# this will be the part where I print the final matrix
+value_to_char:															# this converts from an integer byte to a char
+end_program:																# end of program
 	mov $1, %eax
 	xor %ebx, %ebx
 	int $0x80
