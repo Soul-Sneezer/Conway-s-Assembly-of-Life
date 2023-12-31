@@ -11,6 +11,7 @@ matrix_copy: .space 1600
 .global main
 main:
 
+
 read_input:
 	mov $3, %eax							# argument for read
 	xor %ebx, %ebx						# read from stdin
@@ -81,23 +82,90 @@ execute_evolutions:						#
 	mov $1, %ecx
 	mov $1, %ebx
 execute_evolution:
-	mov $1, %eax
+	mov $0, %eax
 	mov m, %ecx
 	inc %ecx
 	mov n, %edx
 	inc %edx
 change_row:
+	inc %eax
 	cmp %eax, %edx
 	je print_matrix
-	mov $1, %ebx
-chance_column:
+	mov $0, %ebx
+change_column:
+	inc %ebx
 	cmp %ebx, %ecx
 	je change_row
 traverse_neighbors:
-	mov $0, %esi
-	
-	inc %ebx
-	
+	push %eax
+	push %ebx
+	dec %eax
+	mul m
+	add %ebx, %eax
+	dec %eax
+	cmp (%ebp, %eax, 4), $1
+	je increment_esi1
+jump_back1:
+	inc %eax
+	cmp (%ebp, %eax, 4), $1
+	je increment_esi2
+jump_back2:
+	inc %eax
+	cmp (%ebp, %eax, 4), $1
+	je increment_esi3
+jump_back3:
+	add m, %eax
+	cmp (%ebx, %eax, 4), $1
+	je increment_esi4
+jump_back4:
+	dec %eax
+	cmp (%ebx, %eax, 4), $1
+	je increment_esi5
+jump_back5:
+	dec %eax
+	cmp (%ebx, %eax, 4), $1
+	je increment_esi6
+jump_back6:
+	add m, %eax
+	cmp (%ebx, %eax, 4), $1
+	je increment_esi7
+jump_back7:
+	inc %eax
+	cmp (%ebx, %eax, 4), $1
+	je increment_esi8
+jump_back8:
+	inc %eax
+	cmp (%ebx, %eax, 4), $1
+	je increment_esi9
+jump_back9:
+	jmp change_column
+increment_esi1:
+	inc %esi
+	jmp jump_back1
+increment_esi2:
+	inc %esi
+	jmp jump_back2
+increment_esi3:
+	inc %esi
+	jmp jump_back3
+increment_esi4:
+	inc %esi
+	jmp jump_back4
+increment_esi5:
+	inc %esi
+	jmp jump_back5
+increment_esi6:
+	inc %esi
+	jmp jump_back6
+increment_esi7:
+	inc %esi
+	jmp jump_back7
+increment_esi8:
+	inc %esi
+	jmp jump_back8
+increment_esi9:
+	inc %esi
+	jmp jump_back9
 print_matrix:
 value_to_char:
 	mov $2, %ebx/*	
