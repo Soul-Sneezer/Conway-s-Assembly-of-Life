@@ -7,6 +7,7 @@ list: .space 2048
 k: .space 4
 matrix: .space 1600
 matrix_copy: .space 1600
+output: .space 400
 .text
 .global main
 main:
@@ -84,7 +85,7 @@ execute_evolutions:						#
 #	lea matrix_copy, might not be necessary :o
 execute_evolution:
 	cmp $0, k									  # if k is 0 there are no evolutions left
-	je print_matrix 						# then print the matrix
+	je init_print_matrix 						# then print the matrix
 	dec k												# decrement k
 	#mov $1, %ecx
 	xor %eax, %eax							# reset eax
@@ -198,9 +199,44 @@ copy_matrix_loop:
 	movl %edx, (%ebp, %eax, 4) # else, move the value of copy into the original
 	inc %ebx																	# go to the next element
 	jmp copy_matrix_loop											# repeat
-print_matrix:																# this will be the part where I print the final matrix
+init_print_matrix:# this will be the part where I print the final matrix
+	lea output, %ebp
+	mov n, %eax
+	inc %eax
+	inc %eax
+	mov m, %ecx
+	inc %ecx
+	mul %ecx
+	lea matrix, %edx
+	xor %ebx, %ebx
+
+print_matrix:
+	#	mov %ecx, %ebx
+#	add $2, %ebx
+
+	cmp %ebx, %eax
+	je end_program
 value_to_char:															# this converts from an integer byte to a char
+	cmp $1, (%edx, %ebx, 4)
+	je print_one
+	jmp print_zero
+print_one:
+	mov $49, (%ebp, %ebx, 1)
+	jmp print_char
+print_zero:
+	mov $48, (%ebp, %ebx, 1)
+print_char:
+	inc %ebx
+	jump print_matrix
 end_program:																# end of program
+#set the value at index %eax, to end of program
+	mov $3, (%ebp, %eax, 1)
+	mov $4, %eax
+	mov $1, %ebx
+	lea output, %ecx
+	mov $400, %edx
+	int $0x80
+
 	mov $1, %eax
 	xor %ebx, %ebx
 	int $0x80
