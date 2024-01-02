@@ -51,7 +51,10 @@ found_whitespace:
 	jmp parse_values					# loop
 create_matrix:
 	mov n, %eax
-	mul m											# get number of elements in matrix
+	add $2, %eax
+	mov m, %ecx
+	add $2, %ecx
+	mul %ecx											# get number of elements in matrix
 	lea matrix_copy, %ecx
 	lea matrix, %ebp					# get address of matrix
 initialize_matrix:
@@ -63,20 +66,28 @@ initialize_matrix:
 	lea list, %ebp						# get list of coordinates
 	lea matrix, %esi					# get matrix
 	mov p, %ebx								# get p(number of coordinates) into %ebx
-	mov $0, %edi							# reset %edi
+	xor %edi, %edi							# reset %edi
 set_ones:
 	cmp $0, %ebx							# if %ebx is 0 go
 	je execute_evolutions			# to execute_evolution
 	mov (%ebp, %edi, 4), %eax	# else move the first coord into %eax
 	mov 4(%ebp, %edi, 4), %ecx	# the second one into %ecx
 	inc %eax										# this is for padding
+	mov %eax, %edx
+	push %edx
+	push %eax
 	inc %ecx										# this is for padding
 	inc %edi										#inc %edi twice to get the next pair of coordinates
 	inc %edi
-	mul m												# mul row number by elements per row to get the proper index
+	xor %edx, %edx
+	mul m
+	pop %edx
+	add %edx, %eax
+	add %edx, %eax
 	add %ecx, %eax							# y * m + x
 	mov $1, (%esi, %eax, 4)			# set to one
 	dec %ebx										# one less set of coordinates
+	pop %eax
 	jmp set_ones								# loop
 execute_evolutions:						# 
 	mov (%ebp, %edi, 4), %edx		# moves the last element in the list into %edx
@@ -189,6 +200,8 @@ copy_matrix:					# get the values from matrix_copy into matrix
 	mov n, %eax					
 	mov m, %ebx
 	inc %eax
+	inc %eax
+	inc %ebx
 	inc %ebx
 	mul %ebx						# stores into %eax the number of elements we need to go through
 	mov $0, %ebx				# index of current element
@@ -197,6 +210,7 @@ copy_matrix_loop:
 	je execute_evolution	# execute next_evolution
 	mov 1600(%ebp, %eax, 4), %edx
 	movl %edx, (%ebp, %eax, 4) # else, move the value of copy into the original
+	mov $0, 1600(%ebp, %eax, 4)
 	inc %ebx																	# go to the next element
 	jmp copy_matrix_loop											# repeat
 init_print_matrix:# this will be the part where I print the final matrix
@@ -206,31 +220,55 @@ init_print_matrix:# this will be the part where I print the final matrix
 	inc %eax
 	mov m, %ecx
 	inc %ecx
+	inc %ecx
 	mul %ecx
 	lea matrix, %edx
 	xor %ebx, %ebx
-
+	mov %ecx, %ebx
+	sub %ecx, %eax
+	xor %edi, %edi
 print_matrix:
-	#	mov %ecx, %ebx
-#	add $2, %ebx
-
 	cmp %ebx, %eax
 	je end_program
-value_to_char:															# this converts from an integer byte to a char
+	push %edx
+	push %eax
+	mov %ebx, %eax
+	inc %eax
+	xor %edx, %edx
+	idiv %ecx
+	cmp $0, %edx
+	je print_endline
+	cmp $1, %edx
+	je print_nothing
+	pop %eax
+	pop %edx
+value_to_char: # this converts from an integer byte to a char
 	cmp $1, (%edx, %ebx, 4)
 	je print_one
 	jmp print_zero
+print_endline:
+	mov $10, (%ebp, %edi, 1)
+	inc %edi
+	pop %eax
+	pop %edx
+	jmp print_char
 print_one:
-	mov $49, (%ebp, %ebx, 1)
+	mov $49, (%ebp, %edi, 1)
+	inc %edi
 	jmp print_char
 print_zero:
-	mov $48, (%ebp, %ebx, 1)
+	mov $48, (%ebp, %edi, 1)
+	inc %edi
+	jmp print_char
+print_nothing:
+	pop %eax
+	pop %edx
 print_char:
 	inc %ebx
-	jump print_matrix
+	jmp print_matrix
 end_program:																# end of program
 #set the value at index %eax, to end of program
-	mov $3, (%ebp, %eax, 1)
+	mov $3, (%ebp, %ebx, 1)
 	mov $4, %eax
 	mov $1, %ebx
 	lea output, %ecx
