@@ -105,46 +105,46 @@ traverse_neighbors:
 	mul m												# multiply by m to get the index in the sequential list
 	add %ebx, %eax							# add column index to get the proper element
 	dec %eax										# decrement to start in the corner
-	cmp (%ebp, %eax, 4), $1			# compare the element in the corner to 1
+	cmp $1, (%ebp, %eax, 4)			# compare the element in the corner to 1
 	je increment_edx1						# if it's 1, increment %edx
 jump_back1:										# this is where we jump back from increment_edx1
 	inc %eax										# get the next element on the row
-	cmp (%ebp, %eax, 4), $1			# compare it to 1
+	cmp $1, (%ebp, %eax, 4)			# compare it to 1
 	je increment_edx2						# if 1, increment $edx
 jump_back2:										# jump back from increment_edx2
 	inc %eax										# next element on the row
-	cmp (%ebp, %eax, 4), $1			# compare to 1
+	cmp $1, (%ebp, %eax, 4)			# compare to 1
 	je increment_edx3						# if 1, increment
 jump_back3:										# jump back
 	add m, %eax									# get the next row, but start at the end
-	cmp (%ebx, %eax, 4), $1			# compare to 1
+	cmp $1, (%ebp, %eax, 4)			# compare to 1
 	je increment_edx4						# if 1, increment
 jump_back4:										# jump back
 	dec %eax										# get the element before now
-	cmp (%ebx, %eax, 4), $1			# compare
+	cmp $1, (%ebp, %eax, 4)			# compare
 	je increment_edx5						# increment
 jump_back5:										# jump back
 	dec %eax										# element from before
-	cmp (%ebx, %eax, 4), $1			# compare
+	cmp $1, (%ebp, %eax, 4)			# compare
 	je increment_edx6						# increment
 jump_back6:										# jump back
 	add m, %eax									# get to the next row, this time from the beginning
-	cmp (%ebx, %eax, 4), $1			# compare
+	cmp $1, (%ebp, %eax, 4)			# compare
 	je increment_edx7						# increment
 jump_back7:										# jump
 	inc %eax										# get to the next element on the row
-	cmp (%ebx, %eax, 4), $1			# compare
+	cmp $1, (%ebp, %eax, 4)			# compare
 	je increment_edx8						# increment
 jump_back8:										# jump
 	inc %eax										# next element
-	cmp (%ebx, %eax, 4), $1			# compare
+	cmp $1, (%ebp, %eax, 4)			# compare
 	je increment_edx9						# increment
 jump_back9:										# jump back
 	sub m, %eax									# get to the middle row
 	dec %eax										# middle column, where the current element is
-	cmp %edx, 3 # cell should be alive
+	cmp $3, %edx # cell should be alive
 	je alive
-	cmp %edx, 2	# cell should be alive :0
+	cmp $2, %edx	# cell should be alive :0
 	je alive
 	jmp dead		# otherwise it's dead
 alive:
@@ -194,7 +194,8 @@ copy_matrix:					# get the values from matrix_copy into matrix
 copy_matrix_loop:	
 	cmp %ebx, %eax			# if is at end
 	je execute_evolution	# execute next_evolution
-	mov 1600(%ebp, %eax, 4), (%ebp, %eax, 4) # else, move the value of copy into the original
+	mov 1600(%ebp, %eax, 4), %edx
+	movl %edx, (%ebp, %eax, 4) # else, move the value of copy into the original
 	inc %ebx																	# go to the next element
 	jmp copy_matrix_loop											# repeat
 print_matrix:																# this will be the part where I print the final matrix
