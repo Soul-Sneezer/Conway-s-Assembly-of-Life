@@ -7,7 +7,7 @@ list: .space 2048
 k: .space 4
 matrix: .space 1600
 matrix_copy: .space 1600
-output: .space 400
+output: .space 3200
 .text
 .global main
 main:
@@ -59,8 +59,8 @@ create_matrix:
 	lea matrix, %ebp					# get address of matrix
 initialize_matrix:
 	dec %eax									# start from the end of the matrix(easier this way)
-	mov $0, (%ecx, %eax, 4)
-	mov $0, (%ebp, %eax, 4)		# set value at index %eax to 0
+	movl $0, (%ecx, %eax, 4)
+	movl $0, (%ebp, %eax, 4)		# set value at index %eax to 0
 	cmp $0, %eax							# if eax is 0 stop loop
 	jne initialize_matrix			# else continue
 	lea list, %ebp						# get list of coordinates
@@ -84,7 +84,7 @@ set_ones:
 	mul %ebx
 	pop %ebx
 	add %ecx, %eax							# y * m + x
-	mov $1, (%esi, %eax, 4)			# set to one
+	movl $1, (%esi, %eax, 4)			# set to one
 	dec %ebx										# one less set of coordinates
 	jmp set_ones								# loop
 execute_evolutions:						# 
@@ -92,10 +92,9 @@ execute_evolutions:						#
 	mov %edx, k									# that element has the value of k		
 	lea matrix, %ebp						# load address of matrix into ebp
 execute_evolution:
-	cmp $0, k									  # if k is 0 there are no evolutions left
+	cmpl $0, k									  # if k is 0 there are no evolutions left
 	je init_print_matrix 						# then print the matrix
-	dec k												# decrement k
-	#mov $1, %ecx
+	decl k												# decrement k
 	xor %eax, %eax							# reset eax
 change_row:
 	inc %eax										# the index starts at 1 because at 0 we have the padding
@@ -138,7 +137,7 @@ traverse_neighbors:
 	add (%ebp, %eax, 4), %edx			# compare
 	sub %ebx, %eax									# get to the middle row
 	dec %eax										# middle column, where the current element is
-	cmp $1, (%ebp, %eax, 4)
+	cmpl $1, (%ebp, %eax, 4)
 	je is_alive
 	cmp $3, %edx # cell should be alive
 	je alive
@@ -150,12 +149,12 @@ is_alive:
 	je alive
 	jmp dead
 alive:
-	mov $1, 1600(%ebp, %eax, 4) # move $1, into the copy, at the index of the current one
+	movl $1, 1600(%ebp, %eax, 4) # move $1, into the copy, at the index of the current one
 	pop %ebx										# get %ebx back
 	pop %eax										# get %eax back
 	jmp change_column						# go to the next element
 dead:
-	mov $0, 1600(%ebp, %eax, 4)	# move $0, into the copy, at the index of the current one
+	movl $0, 1600(%ebp, %eax, 4)	# move $0, into the copy, at the index of the current one
 	pop %ebx										# get %ebx back
 	pop %eax										# get %eax back
 	jmp change_column						# go to the next element
@@ -207,21 +206,25 @@ print_matrix:
 	pop %eax
 	pop %edx
 value_to_char: # this converts from an integer byte to a char
-	cmp $1, (%edx, %ebx, 4)
+	cmpl $1, (%edx, %ebx, 4)
 	je print_one
 	jmp print_zero
 print_endline:
-	mov $10, (%ebp, %edi, 1)
+	movb $10, (%ebp, %edi, 1)
 	inc %edi
 	pop %eax
 	pop %edx
 	jmp print_char
 print_one:
-	mov $49, (%ebp, %edi, 1)
+	movb $49, (%ebp, %edi, 1)
+	inc %edi
+	movb $32, (%ebp, %edi, 1)
 	inc %edi
 	jmp print_char
 print_zero:
-	mov $48, (%ebp, %edi, 1)
+	movb $48, (%ebp, %edi, 1)
+	inc %edi
+	movb $32, (%ebp, %edi, 1)
 	inc %edi
 	jmp print_char
 print_nothing:
@@ -231,12 +234,10 @@ print_char:
 	inc %ebx
 	jmp print_matrix
 end_program:																# end of program
-#set the value at index %eax, to end of program
-	mov $3, (%ebp, %ebx, 1)
 	mov $4, %eax
 	mov $1, %ebx
 	lea output, %ecx
-	mov $400, %edx
+	mov $1600, %edx
 	int $0x80
 
 	mov $1, %eax
