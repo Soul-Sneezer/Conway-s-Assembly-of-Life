@@ -67,6 +67,7 @@ initialize_matrix:
 	lea matrix, %esi					# get matrix
 	mov p, %ebx								# get p(number of coordinates) into %ebx
 	xor %edi, %edi							# reset %edi
+	xor %ecx, %ecx
 set_ones:
 	cmp $0, %ebx							# if %ebx is 0 go
 	je execute_evolutions			# to execute_evolution
@@ -114,7 +115,10 @@ traverse_neighbors:
 	push %eax										# push %eax to the stack because we'll be using it for other things for now
 	push %ebx										# push %ebx to the stack because we'll be using it for other things for now
 	dec %eax										# decrement eax because we start at row y - 1 where y is the row number of the current element
+	push %edx
+
 	mul m												# multiply by m to get the index in the sequential list
+	pop %edx
 	add %ebx, %eax							# add column index to get the proper element
 	dec %eax										# decrement to start in the corner
 	cmp $1, (%ebp, %eax, 4)			# compare the element in the corner to 1
@@ -145,7 +149,7 @@ jump_back6:										# jump back
 	je increment_edx7						# increment
 jump_back7:										# jump
 	inc %eax										# get to the next element on the row
-	cmp $1, (%ebp, %eax, 4)			# compare
+	add $1, (%ebp, %eax, 4)			# compare
 	je increment_edx8						# increment
 jump_back8:										# jump
 	inc %eax										# next element
@@ -208,9 +212,9 @@ copy_matrix:					# get the values from matrix_copy into matrix
 copy_matrix_loop:	
 	cmp %ebx, %eax			# if is at end
 	je execute_evolution	# execute next_evolution
-	mov 1600(%ebp, %eax, 4), %edx
-	movl %edx, (%ebp, %eax, 4) # else, move the value of copy into the original
-	mov $0, 1600(%ebp, %eax, 4)
+	mov 1600(%ebp, %ebx, 4), %edx
+	mov %edx, (%ebp, %ebx, 4) # else, move the value of copy into the original
+	mov $0, 1600(%ebp, %ebx, 4)
 	inc %ebx																	# go to the next element
 	jmp copy_matrix_loop											# repeat
 init_print_matrix:# this will be the part where I print the final matrix
