@@ -10,6 +10,10 @@ list: .space 2048
 formatscan: .asciz "%d"
 formatprint: .asciz "%c "
 formatprint2: .asciz "%c"
+filename_in: .asciz "in.txt"
+filename_out: .asciz "out.txt"
+fd_in: .space 4
+fd_out: .space 4
 matrix: .space 1600
 matrix_copy: .space 1600
 output: .space 3200
@@ -17,21 +21,37 @@ output: .space 3200
 .global main
 main:
 read_input:
+	push $filename_in
+	call fopen
+	pop %ebx
+	mov %eax, fd_in
+
+	push $filename_out
+	call fopen
+	pop %ebx
+	mov %eax, fd_out
+
 	push $n
 	push $formatscan
-	call scanf
+	push $fd_in
+	call fscanf
+	pop %ebx
 	pop %ebx
 	pop %ebx
 
 	push $m
 	push $formatscan
-	call scanf
+	push $fd_in
+	call fscanf
+	pop %ebx
 	pop %ebx
 	pop %ebx
 
 	push $p
 	push $formatscan
-	call scanf
+	push $fd_in
+	call fscanf
+	pop %ebx
 	pop %ebx
 	pop %ebx
 
@@ -46,7 +66,9 @@ read_ones:
 	push %ecx
 	push $x
 	push $formatscan
-	call scanf
+	push $fd_in
+	call fscanf
+	pop %ebx
 	pop %ebx
 	pop %ebx
 
@@ -57,7 +79,9 @@ read_ones:
 
 	push $y
 	push $formatscan
-	call scanf
+	push $fd_in
+	call fscanf
+	pop %ebx
 	pop %ebx
 	pop %ebx
 
@@ -71,7 +95,9 @@ read_ones:
 create_matrix:
 	push $k
 	push $formatscan
-	call scanf
+	push $fd_in
+	call fscanf
+	pop %ebx
 	pop %ebx
 	pop %ebx
 
@@ -241,7 +267,9 @@ print_endline:
 	push %ebx
 	push $10
 	push $formatprint2
+	push $fd_out
 	call printf
+	pop %ebp
 	pop %ebp
 	pop %ebp
 
@@ -259,7 +287,9 @@ print_one:
 	push %ebx
 	push $49
 	push $formatprint
-	call printf
+	push $fd_out
+	call fprintf
+	pop %ebp
 	pop %ebp
 	pop %ebp
 
@@ -277,7 +307,9 @@ print_zero:
 	push %ebx
 	push $48
 	push $formatprint
-	call printf
+	push $fd_out
+	call fprintf
+	pop %ebp
 	pop %ebp
 	pop %ebp
 
