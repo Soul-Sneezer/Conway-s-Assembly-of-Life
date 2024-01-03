@@ -8,7 +8,7 @@ y: .space 4
 list: .space 2048
 k: .space 4
 formatscan: .asciz "%d"
-formatprint: .asciz "%c "
+formatprint: .asciz "%d "
 matrix: .space 1600
 matrix_copy: .space 1600
 output: .space 3200
@@ -197,7 +197,7 @@ copy_matrix_loop:
 	je execute_evolution	# execute next_evolution
 	movb 1600(%ebp, %ebx, 4), %dl
 	movb %dl, (%ebp, %ebx, 4) # else, move the value of copy into the original
-	#mov $0, 1600(%ebp, %ebx, 4)
+	mov $0, 1600(%ebp, %ebx, 4)
 	inc %ebx																	# go to the next element
 	jmp copy_matrix_loop											# repeat
 init_print_matrix:# this will be the part where I print the final matrix
@@ -223,22 +223,24 @@ print_matrix:
 	inc %eax
 	xor %edx, %edx
 	idiv %ecx
+	cmp $0, %edx
+	je print_endline
+	cmp $1, %edx
+	je print_nothing
 	pop %eax
 	pop %edx
 	push %eax
 	push %edx
 	push %ecx
-	cmp $0, %edx
-	je print_endline
-	cmp $1, %edx
-	je print_nothing
+
 value_to_char: # this converts from an integer byte to a char
 	cmpl $1, (%edx, %ebx, 4)
 	je print_one
 	jmp print_zero
 print_endline:
+	push %ecx
 	push %ebx
-	push $10
+	push $3
 	push $formatprint
 	call printf
 	pop %ebp
@@ -250,13 +252,13 @@ print_endline:
 
 	pop %ebx
 	pop %ecx
-	pop %edx
 	pop %eax
+	pop %edx
 
 	jmp print_char
 print_one:
 	push %ebx
-	push $48
+	push $1
 	push $formatprint
 	call printf
 	pop %ebp
@@ -274,7 +276,7 @@ print_one:
 	jmp print_char
 print_zero:
 	push %ebx
-	push $48
+	push $0
 	push $formatprint
 	call printf
 	pop %ebp
@@ -292,9 +294,8 @@ print_zero:
 	
 	jmp print_char
 print_nothing:
-	pop %ecx
-	pop %edx
 	pop %eax
+	pop %edx
 print_char:
 	inc %ebx
 	jmp print_matrix
