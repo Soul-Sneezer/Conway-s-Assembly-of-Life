@@ -5,10 +5,11 @@ m: .space 4
 p: .space 4
 x: .space 4
 y: .space 4
-list: .space 2048
 k: .space 4
+list: .space 2048
 formatscan: .asciz "%d"
-formatprint: .asciz "%d "
+formatprint: .asciz "%c "
+formatprint2: .asciz "%c"
 matrix: .space 1600
 matrix_copy: .space 1600
 output: .space 3200
@@ -112,8 +113,6 @@ set_ones:
 	dec %ebx										# one less set of coordinates
 	jmp set_ones								# loop
 execute_evolutions:						# 
-	mov (%ebp, %edi, 4), %edx		# moves the last element in the list into %edx
-	mov %edx, k									# that element has the value of k		
 	lea matrix, %ebp						# load address of matrix into ebp
 execute_evolution:
 	cmpl $0, k									  # if k is 0 there are no evolutions left
@@ -240,8 +239,8 @@ value_to_char: # this converts from an integer byte to a char
 print_endline:
 	push %ecx
 	push %ebx
-	push $3
-	push $formatprint
+	push $10
+	push $formatprint2
 	call printf
 	pop %ebp
 	pop %ebp
@@ -258,7 +257,7 @@ print_endline:
 	jmp print_char
 print_one:
 	push %ebx
-	push $1
+	push $49
 	push $formatprint
 	call printf
 	pop %ebp
@@ -276,7 +275,7 @@ print_one:
 	jmp print_char
 print_zero:
 	push %ebx
-	push $0
+	push $48
 	push $formatprint
 	call printf
 	pop %ebp
