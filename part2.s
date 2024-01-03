@@ -39,7 +39,7 @@ read_input:
 
 	push $n
 	push $formatscan
-	push $fd_in
+	push fd_in
 	call fscanf
 	pop %ebx
 	pop %ebx
@@ -47,7 +47,7 @@ read_input:
 
 	push $m
 	push $formatscan
-	push $fd_in
+	push fd_in
 	call fscanf
 	pop %ebx
 	pop %ebx
@@ -55,7 +55,7 @@ read_input:
 
 	push $p
 	push $formatscan
-	push $fd_in
+	push fd_in
 	call fscanf
 	pop %ebx
 	pop %ebx
@@ -72,7 +72,7 @@ read_ones:
 	push %ecx
 	push $x
 	push $formatscan
-	push $fd_in
+	push fd_in
 	call fscanf
 	pop %ebx
 	pop %ebx
@@ -85,7 +85,7 @@ read_ones:
 
 	push $y
 	push $formatscan
-	push $fd_in
+	push fd_in
 	call fscanf
 	pop %ebx
 	pop %ebx
@@ -101,7 +101,7 @@ read_ones:
 create_matrix:
 	push $k
 	push $formatscan
-	push $fd_in
+	push fd_in
 	call fscanf
 	pop %ebx
 	pop %ebx
@@ -228,7 +228,7 @@ copy_matrix_loop:
 	je execute_evolution	# execute next_evolution
 	movb 1600(%ebp, %ebx, 4), %dl
 	movb %dl, (%ebp, %ebx, 4) # else, move the value of copy into the original
-	mov $0, 1600(%ebp, %ebx, 4)
+	movl $0, 1600(%ebp, %ebx, 4)
 	inc %ebx																	# go to the next element
 	jmp copy_matrix_loop											# repeat
 init_print_matrix:# this will be the part where I print the final matrix
@@ -273,8 +273,8 @@ print_endline:
 	push %ebx
 	push $10
 	push $formatprint2
-	push $fd_out
-	call printf
+	push fd_out
+	call fprintf
 	pop %ebp
 	pop %ebp
 	pop %ebp
@@ -293,7 +293,7 @@ print_one:
 	push %ebx
 	push $49
 	push $formatprint
-	push $fd_out
+	push fd_out
 	call fprintf
 	pop %ebp
 	pop %ebp
@@ -313,7 +313,7 @@ print_zero:
 	push %ebx
 	push $48
 	push $formatprint
-	push $fd_out
+	push fd_out
 	call fprintf
 	pop %ebp
 	pop %ebp
@@ -337,11 +337,11 @@ print_char:
 	inc %ebx
 	jmp print_matrix
 end_program:																# end of program
-	push $fd_in
+	push fd_in
 	call fclose
 	pop %eax
 
-	push $fd_out
+	push fd_out
 	call fclose
 	pop %eax
 
