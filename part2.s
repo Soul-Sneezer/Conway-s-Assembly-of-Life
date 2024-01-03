@@ -208,7 +208,7 @@ init_print_matrix:# this will be the part where I print the final matrix
 	inc %ecx
 	inc %ecx
 	mul %ecx
-	lea matrix_copy, %edx
+	lea matrix, %edx
 	xor %ebx, %ebx
 	mov %ecx, %ebx
 	sub %ecx, %eax

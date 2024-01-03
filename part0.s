@@ -173,7 +173,7 @@ copy_matrix_loop:
 	je execute_evolution	# execute next_evolution
 	movb 1600(%ebp, %ebx, 4), %dl
 	movb %dl, (%ebp, %ebx, 4) # else, move the value of copy into the original
-	#mov $0, 1600(%ebp, %ebx, 4)
+	mov $0, 1600(%ebp, %ebx, 4)
 	inc %ebx																	# go to the next element
 	jmp copy_matrix_loop											# repeat
 init_print_matrix:# this will be the part where I print the final matrix
@@ -185,7 +185,7 @@ init_print_matrix:# this will be the part where I print the final matrix
 	inc %ecx
 	inc %ecx
 	mul %ecx
-	lea matrix_copy, %edx
+	lea matrix, %edx
 	xor %ebx, %ebx
 	mov %ecx, %ebx
 	sub %ecx, %eax
