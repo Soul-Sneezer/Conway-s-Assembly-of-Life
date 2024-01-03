@@ -11,7 +11,9 @@ formatscan: .asciz "%d"
 formatprint: .asciz "%c "
 formatprint2: .asciz "%c"
 filename_in: .asciz "in.txt"
+mode_in: .asciz "r"
 filename_out: .asciz "out.txt"
+mode_out: .asciz "w"
 fd_in: .space 4
 fd_out: .space 4
 matrix: .space 1600
@@ -21,13 +23,17 @@ output: .space 3200
 .global main
 main:
 read_input:
+	push $mode_in
 	push $filename_in
 	call fopen
 	pop %ebx
+	pop %ebx
 	mov %eax, fd_in
 
+	push $mode_out
 	push $filename_out
 	call fopen
+	pop %ebx
 	pop %ebx
 	mov %eax, fd_out
 
@@ -331,6 +337,14 @@ print_char:
 	inc %ebx
 	jmp print_matrix
 end_program:																# end of program
+	push $fd_in
+	call fclose
+	pop %eax
+
+	push $fd_out
+	call fclose
+	pop %eax
+
 	mov $1, %eax
 	xor %ebx, %ebx
 	int $0x80
