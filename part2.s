@@ -40,7 +40,7 @@ read_input:
 	xor %edi, %edi
 read_ones:
 	cmp p, %ecx
-	jg create_matrix
+	je create_matrix
 
 	push %ecx
 	push $x
@@ -215,7 +215,7 @@ init_print_matrix:# this will be the part where I print the final matrix
 	sub %ecx, %eax
 	xor %edi, %edi
 print_matrix:
-	cmp %ebx, %eax
+	cmp %eax, %ebx
 	je end_program
 	push %edx
 	push %eax
@@ -223,13 +223,15 @@ print_matrix:
 	inc %eax
 	xor %edx, %edx
 	idiv %ecx
+	pop %eax
+	pop %edx
+	push %eax
+	push %edx
 	push %ecx
 	cmp $0, %edx
 	je print_endline
 	cmp $1, %edx
 	je print_nothing
-	pop %eax
-	pop %edx
 value_to_char: # this converts from an integer byte to a char
 	cmpl $1, (%edx, %ebx, 4)
 	je print_one
@@ -241,10 +243,15 @@ print_endline:
 	call printf
 	pop %ebp
 	pop %ebp
+
+	push $0
+	call fflush
+	pop %ebp
+
 	pop %ebx
 	pop %ecx
-	pop %eax
 	pop %edx
+	pop %eax
 
 	jmp print_char
 print_one:
@@ -254,11 +261,16 @@ print_one:
 	call printf
 	pop %ebp
 	pop %ebp
+
+	push $0
+	call fflush
+	pop %ebp
+
 	pop %ebx
 	pop %ecx
-	pop %eax
 	pop %edx
-
+	pop %eax
+	
 	jmp print_char
 print_zero:
 	push %ebx
@@ -267,16 +279,22 @@ print_zero:
 	call printf
 	pop %ebp
 	pop %ebp
+
+	push $0
+	call fflush
+	pop %ebp
+
 	pop %ebx
 	pop %ecx
-	pop %eax
 	pop %edx
+	pop %eax
 
+	
 	jmp print_char
 print_nothing:
 	pop %ecx
-	pop %eax
 	pop %edx
+	pop %eax
 print_char:
 	inc %ebx
 	jmp print_matrix
