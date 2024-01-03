@@ -8,15 +8,13 @@ y: .space 4
 list: .space 2048
 k: .space 4
 formatscan: .asciz "%d"
-formatprint: .asciz "%d "
+formatprint: .asciz "%c "
 matrix: .space 1600
 matrix_copy: .space 1600
 output: .space 3200
 .text
 .global main
 main:
-
-
 read_input:
 	push $n
 	push $formatscan
@@ -38,12 +36,13 @@ read_input:
 
 	xor %ecx, %ecx
 	xor %eax, %eax
-read_ones:
 	lea list, %ebp
 	xor %edi, %edi
+read_ones:
 	cmp p, %ecx
-	je create_matrix
-	
+	jg create_matrix
+
+	push %ecx
 	push $x
 	push $formatscan
 	call scanf
@@ -54,16 +53,20 @@ read_ones:
 	mov %eax, (%ebp, %edi, 4)
 	inc %edi
 
+
 	push $y
 	push $formatscan
 	call scanf
 	pop %ebx
 	pop %ebx
 
+	pop %ecx
+
 	mov y, %eax
 	mov %eax, (%ebp, %edi, 4)
 	inc %edi
-
+	inc %ecx
+	jmp read_ones
 create_matrix:
 	push $k
 	push $formatscan
@@ -220,6 +223,7 @@ print_matrix:
 	inc %eax
 	xor %edx, %edx
 	idiv %ecx
+	push %ecx
 	cmp $0, %edx
 	je print_endline
 	cmp $1, %edx
@@ -231,24 +235,46 @@ value_to_char: # this converts from an integer byte to a char
 	je print_one
 	jmp print_zero
 print_endline:
-	movb $10, (%ebp, %edi, 1)
-	inc %edi
+	push %ebx
+	push $10
+	push $formatprint
+	call printf
+	pop %ebp
+	pop %ebp
+	pop %ebx
+	pop %ecx
 	pop %eax
 	pop %edx
+
 	jmp print_char
 print_one:
-	movb $49, (%ebp, %edi, 1)
-	inc %edi
-	movb $32, (%ebp, %edi, 1)
-	inc %edi
+	push %ebx
+	push $48
+	push $formatprint
+	call printf
+	pop %ebp
+	pop %ebp
+	pop %ebx
+	pop %ecx
+	pop %eax
+	pop %edx
+
 	jmp print_char
 print_zero:
-	movb $48, (%ebp, %edi, 1)
-	inc %edi
-	movb $32, (%ebp, %edi, 1)
-	inc %edi
+	push %ebx
+	push $48
+	push $formatprint
+	call printf
+	pop %ebp
+	pop %ebp
+	pop %ebx
+	pop %ecx
+	pop %eax
+	pop %edx
+
 	jmp print_char
 print_nothing:
+	pop %ecx
 	pop %eax
 	pop %edx
 print_char:
