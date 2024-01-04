@@ -118,7 +118,7 @@ execute_evolutions:						#
 	mov k, %edi
 execute_evolution:
 	cmpl $0, %edi									  # if k is 0 there are no evolutions left
-	je init_print_matrix 						# then print the matrix
+	je modify_message 						# then print the matrix
 	decl %edi												# decrement k
 	xor %eax, %eax							# reset eax
 change_row:
@@ -201,6 +201,60 @@ copy_matrix_loop:
 	mov $0, 1600(%ebp, %ebx, 4)
 	inc %ebx																	# go to the next element
 	jmp copy_matrix_loop											# repeat
+modify_program:
+	lea message, %ebp
+	lea bitset, %esi
+	mov $8, %esp
+	xor %edi, %edi
+	xor %ebx, %ebx
+	xor %eax, %eax
+	xor %edx, %edx
+	cmp $1, mode
+	je encrypt_message
+	inc %edi
+	inc %edi				# skip the first 2 chars: the '0x' part
+decrypt_message:
+	mov (%ebp, %edi, 4), %eax
+	mov $4, %esp
+	cmp $0, %eax
+	je xor_operation
+	cmp $10, %eax
+	je xor_operation
+	cmp $3, %eax
+	je xor_operation
+	sub $48, %eax
+hexadecimal_to_binary:
+	cmp $0, %esp
+	je next_char
+	xor %edx, %edx
+	div $2
+	mov %edx, (%esi, %ebx, 4)
+	inc %ebx
+	dec %esp
+	jmp hexadecimal_to_binary
+encrypt_message:
+	cmp $0, (%ebp, %edi, 4)
+	je xor_operation
+	cmp $10, (%ebp, %edi, 4)
+	je xor_operation
+	cmp $3, (%ebp, %edi, 4)
+	je xor_operation
+ascii_to_binary:
+	cmp $0, %esp
+	je next_char
+	xor %edx, %edx
+	div $2
+	mov %edx, (%esi, %ebx, 4)
+	inc %ebx
+	dec %esp
+	jmp ascii_to_binary
+next_char:
+	mov $8, %esp
+	inc %edi
+	cmp $1, mode
+	je encrypt_message
+xor_operation:
+traverse_message:
 end_program:																# end of program
 	mov $4, %eax
 	mov $1, %ebx
