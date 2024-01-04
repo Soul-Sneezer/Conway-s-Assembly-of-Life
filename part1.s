@@ -11,6 +11,7 @@ bitset: .space 800
 matrix: .space 1600
 matrix_copy: .space 1600
 output: .space 3200
+output2: .space 3200
 .text
 .global main
 main:
@@ -254,7 +255,113 @@ next_char:
 	cmp $1, mode
 	je encrypt_message
 xor_operation:
-traverse_message:
+	mov $2, (%esi, %edx, 4)
+	xor %edx, %edx
+	mov m, %eax
+	mov n, %ebx
+	inc %eax
+	inc %eax
+	inc %ebx
+	inc %ebx
+	mul %ebx
+	mov %eax, %esp
+	lea %ebp, bitset
+	lea %ecx, matrix
+	lea %edx, output
+	xor %edi, %edi
+	xor %esi, %esi
+do_operation:
+	cmp $2, (%ebp, %edi, 4)
+	je print_output
+	cmp %esi, %esp
+	je reset_esi
+jump_back:
+	mov (%ebp, %edi, 4), %eax
+	mov (%ecx, %esi, 4), %ebx
+	xor %ebx, %eax
+	mov %eax, (%edx, %edi, 4)
+	inc %edi
+reset_esi:
+	xor %esi, %esi
+	jmp jump_back
+print_output:
+	mov %edi, %ecx
+	xor %edi, %edi
+	xor %esi, %esi
+	lea output2, %ebp
+	lea output, %esp
+	cmp $1, mode
+	je print_encrypted
+print_decrypted:	
+loop_ascii:
+	cmp %ecx, %edi
+	je end_program
+	mov %eax, (%ebp, %edi, 4)
+	inc %edi
+bits_to_ascii:
+	xor %edx, %edx
+	xor %eax, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+jmp loop_ascii:
+print_encrypted:
+	add $2, %ecx
+	mov $48, (%ebp, %edi, 4)
+	inc %edi
+	mov $120, (%ebp, %edi, 4)
+	inc %edi
+loop_hex:
+	cmp %ecx, %edi
+	je end_program
+	cmp %eax, $9
+	jle print_integer
+	jmp print_letter
+set_hex:
+	mov %eax, (%ebp, %edi, 4)
+	inc %edi
+calc_hex:
+	xor %edx, %edx
+	xor %eax, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	jmp loop_hex
+print_integer:
+	add $48, %eax
+	jmp set_hex
+print_letter:
+	sub $10, %eax
+	add $97, %eax
+	jmp set_hex
 end_program:																# end of program
 	mov $4, %eax
 	mov $1, %ebx
