@@ -119,7 +119,7 @@ execute_evolutions:						#
 	mov k, %edi
 execute_evolution:
 	cmpl $0, %edi									  # if k is 0 there are no evolutions left
-	je modify_message 						# then print the matrix
+	je modify_program 						# then print the matrix
 	decl %edi												# decrement k
 	xor %eax, %eax							# reset eax
 change_row:
@@ -205,57 +205,139 @@ copy_matrix_loop:
 modify_program:
 	lea message, %ebp
 	lea bitset, %esi
-	mov $8, %esp
 	xor %edi, %edi
 	xor %ebx, %ebx
 	xor %eax, %eax
 	xor %edx, %edx
-	cmp $1, mode
+	cmp $0, mode
 	je encrypt_message
 	inc %edi
 	inc %edi				# skip the first 2 chars: the '0x' part
 decrypt_message:
 	mov (%ebp, %edi, 4), %eax
-	mov $4, %esp
 	cmp $0, %eax
 	je xor_operation
 	cmp $10, %eax
 	je xor_operation
 	cmp $3, %eax
 	je xor_operation
+#	sub $48, %eax
+hex_to_decimal:
+	cmp $65, %eax
+	jae letter_to_decimal
 	sub $48, %eax
 hexadecimal_to_binary:
-	cmp $0, %esp
-	je next_char
 	xor %edx, %edx
-	div $2
+	cmp $65, %eax
+	jae letter_to_decimal
+	sub $48, %eax
+jump_back2:
+	mov %eax, %edx
+	shr $1, %eax
+	shl $1, %eax
+	sub %eax, %edx
+	shr $1, %eax
 	mov %edx, (%esi, %ebx, 4)
 	inc %ebx
-	dec %esp
-	jmp hexadecimal_to_binary
+
+	mov %eax, %edx
+	shr $1, %eax
+	shl $1, %eax
+	sub %eax, %edx
+	shr $1, %eax
+	mov %edx, (%esi, %ebx, 4)
+	inc %ebx
+
+	mov %eax, %edx
+	shr $1, %eax
+	shl $1, %eax
+	sub %eax, %edx
+	shr $1, %eax
+	mov %edx, (%esi, %ebx, 4)
+	inc %ebx
+
+	mov %eax, %edx
+	shr $1, %eax
+	shl $1, %eax
+	sub %eax, %edx
+	shr $1, %eax
+	mov %edx, (%esi, %ebx, 4)
+	inc %ebx
+
+	jmp jump_back2
+letter_to_decimal:
+	sub $55, %eax
+	jmp jump_back2
 encrypt_message:
-	cmp $0, (%ebp, %edi, 4)
+	mov (%ebp, %edi, 4), %eax
+	cmp $0, %eax
 	je xor_operation
-	cmp $10, (%ebp, %edi, 4)
+	cmp $10, %eax
 	je xor_operation
-	cmp $3, (%ebp, %edi, 4)
+	cmp $3, %eax
 	je xor_operation
 ascii_to_binary:
-	cmp $0, %esp
-	je next_char
-	xor %edx, %edx
-	div $2
-	mov %edx, (%esi, %ebx, 4)
-	inc %ebx
-	dec %esp
-	jmp ascii_to_binary
-next_char:
-	mov $8, %esp
+	mov %eax, %edx
+	shr $1, %eax
+	shl $1, %eax
+	sub %eax, %edx
+	shr $1, %eax
+	mov %edx, 28(%esi, %ebx, 4)
+
+	mov %eax, %edx
+	shr $1, %eax
+	shl $1, %eax
+	sub %eax, %edx
+	shr $1, %eax
+	mov %edx, 24(%esi, %ebx, 4)
+
+	mov %eax, %edx
+	shr $1, %eax
+	shl $1, %eax
+	sub %eax, %edx
+	shr $1, %eax
+	mov %edx, 20(%esi, %ebx, 4)
+
+	mov %eax, %edx
+	shr $1, %eax
+	shl $1, %eax
+	sub %eax, %edx
+	shr $1, %eax
+	mov %edx, 16(%esi, %ebx, 4)
+
+	mov %eax, %edx
+	shr $1, %eax
+	shl $1, %eax
+	sub %eax, %edx
+	shr $1, %eax
+	mov %edx, 12(%esi, %ebx, 4)
+
+	mov %eax, %edx
+	shr $1, %eax
+	shl $1, %eax
+	sub %eax, %edx
+	shr $1, %eax
+	mov %edx, 8(%esi, %ebx, 4)
+
+	mov %eax, %edx
+	shr $1, %eax
+	shl $1, %eax
+	sub %eax, %edx
+	shr $1, %eax
+	mov %edx, 4(%esi, %ebx, 4)
+
+	mov %eax, %edx
+	shr $1, %eax
+	shl $1, %eax
+	sub %eax, %edx
+	shr $1, %eax
+	mov %edx, 0(%esi, %ebx, 4)
+
 	inc %edi
-	cmp $1, mode
-	je encrypt_message
+	add $8, %ebx
+	jmp encrypt_message
 xor_operation:
-	mov $2, (%esi, %edx, 4)
+	mov $2, (%esi, %ebx, 4)
 	xor %edx, %edx
 	mov m, %eax
 	mov n, %ebx
@@ -265,9 +347,9 @@ xor_operation:
 	inc %ebx
 	mul %ebx
 	mov %eax, %esp
-	lea %ebp, bitset
-	lea %ecx, matrix
-	lea %edx, output
+	lea bitset, %ebp
+	lea matrix, %ecx
+	lea output, %edx
 	xor %edi, %edi
 	xor %esi, %esi
 do_operation:
@@ -281,6 +363,7 @@ jump_back:
 	xor %ebx, %eax
 	mov %eax, (%edx, %edi, 4)
 	inc %edi
+	jmp do_operation
 reset_esi:
 	xor %esi, %esi
 	jmp jump_back
@@ -292,12 +375,15 @@ print_output:
 	lea output, %esp
 	cmp $1, mode
 	je print_encrypted
-print_decrypted:	
+print_decrypted:
+	mov $48, (%ebp, %edi, 4)
+	inc %edi
+	mov $120, (%ebp, %edi, 4)
+	inc %edi
+	add $2, %ecx
 loop_ascii:
 	cmp %ecx, %edi
 	je end_program
-	mov %eax, (%ebp, %edi, 4)
-	inc %edi
 bits_to_ascii:
 	xor %edx, %edx
 	xor %eax, %eax
@@ -312,35 +398,18 @@ bits_to_ascii:
 	shl $1, %eax
 	add (%esp, %esi, 4), %eax
 	inc %esi
-	shl $1, %eax
-	add (%esp, %esi, 4), %eax
-	inc %esi
-	shl $1, %eax
-	add (%esp, %esi, 4), %eax
-	inc %esi
-	shl $1, %eax
-	add (%esp, %esi, 4), %eax
-	inc %esi
-	shl $1, %eax
-	add (%esp, %esi, 4), %eax
-	inc %esi
-jmp loop_ascii:
+	cmp $10, %eax
+	jb print_integer
+	jmp print_letter
+jump_back1:
+	mov %eax, (%ebp, %edi, 4)
+	inc %edi
+	jmp loop_ascii
 print_encrypted:
-	add $2, %ecx
-	mov $48, (%ebp, %edi, 4)
-	inc %edi
-	mov $120, (%ebp, %edi, 4)
-	inc %edi
 loop_hex:
 	cmp %ecx, %edi
 	je end_program
-	cmp %eax, $9
-	jle print_integer
-	jmp print_letter
-set_hex:
-	mov %eax, (%ebp, %edi, 4)
-	inc %edi
-calc_hex:
+	calc_hex:
 	xor %edx, %edx
 	xor %eax, %eax
 	add (%esp, %esi, 4), %eax
@@ -354,18 +423,32 @@ calc_hex:
 	shl $1, %eax
 	add (%esp, %esi, 4), %eax
 	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	inc %esi
+	shl $1, %eax
+	add (%esp, %esi, 4), %eax
+	mov %eax, (%ebp, %edi, 4)
+	inc %edi
+	inc %esi
 	jmp loop_hex
 print_integer:
 	add $48, %eax
-	jmp set_hex
+	jmp jump_back1
 print_letter:
 	sub $10, %eax
 	add $97, %eax
-	jmp set_hex
+	jmp jump_back1
 end_program:																# end of program
 	mov $4, %eax
 	mov $1, %ebx
-	lea output, %ecx
+	lea output2, %ecx
 	mov $1600, %edx
 	int $0x80
 
