@@ -212,7 +212,7 @@ modify_program:
 	cmp $0, mode
 	je encrypt_message
 	inc %edi
-	inc %edi				# skip the first 2 chars: the '0x' part
+#	inc %edi				# skip the first 2 chars: the '0x' part
 decrypt_message:
 	mov (%ebp, %edi, 4), %eax
 	cmp $0, %eax
@@ -221,13 +221,7 @@ decrypt_message:
 	je xor_operation
 	cmp $3, %eax
 	je xor_operation
-#	sub $48, %eax
 hex_to_decimal:
-	cmp $65, %eax
-	jae letter_to_decimal
-	sub $48, %eax
-hexadecimal_to_binary:
-	xor %edx, %edx
 	cmp $65, %eax
 	jae letter_to_decimal
 	sub $48, %eax
@@ -237,34 +231,33 @@ jump_back2:
 	shl $1, %eax
 	sub %eax, %edx
 	shr $1, %eax
-	mov %edx, (%esi, %ebx, 4)
-	inc %ebx
+	mov %edx, 12(%esi, %ebx, 4)
 
 	mov %eax, %edx
 	shr $1, %eax
 	shl $1, %eax
 	sub %eax, %edx
 	shr $1, %eax
-	mov %edx, (%esi, %ebx, 4)
-	inc %ebx
+	mov %edx, 8(%esi, %ebx, 4)
 
 	mov %eax, %edx
 	shr $1, %eax
 	shl $1, %eax
 	sub %eax, %edx
 	shr $1, %eax
-	mov %edx, (%esi, %ebx, 4)
-	inc %ebx
+	mov %edx, 4(%esi, %ebx, 4)
 
 	mov %eax, %edx
 	shr $1, %eax
 	shl $1, %eax
 	sub %eax, %edx
 	shr $1, %eax
-	mov %edx, (%esi, %ebx, 4)
-	inc %ebx
+	mov %edx, 0(%esi, %ebx, 4)
 
-	jmp jump_back2
+	inc %edi
+	add $4, %ebx
+
+	jmp decrypt_message
 letter_to_decimal:
 	sub $55, %eax
 	jmp jump_back2
@@ -363,6 +356,7 @@ jump_back:
 	xor %ebx, %eax
 	mov %eax, (%edx, %edi, 4)
 	inc %edi
+	inc %esi
 	jmp do_operation
 reset_esi:
 	xor %esi, %esi
@@ -376,15 +370,16 @@ print_output:
 	cmp $1, mode
 	je print_encrypted
 print_decrypted:
+	shr $2, %ecx
+
 	mov $48, (%ebp, %edi, 4)
 	inc %edi
 	mov $120, (%ebp, %edi, 4)
 	inc %edi
 	add $2, %ecx
-loop_ascii:
+bits_to_hex:
 	cmp %ecx, %edi
 	je end_program
-bits_to_ascii:
 	xor %edx, %edx
 	xor %eax, %eax
 	add (%esp, %esi, 4), %eax
@@ -404,12 +399,13 @@ bits_to_ascii:
 jump_back1:
 	mov %eax, (%ebp, %edi, 4)
 	inc %edi
-	jmp loop_ascii
+	jmp bits_to_hex
 print_encrypted:
-loop_hex:
-	cmp %ecx, %edi
-	je end_program
-	calc_hex:
+	#shr $3, %ecx
+#	jmp bits_to_hex
+bits_to_ascii:
+	cmp %ecx, %esi
+	jge end_program
 	xor %edx, %edx
 	xor %eax, %eax
 	add (%esp, %esi, 4), %eax
@@ -434,16 +430,17 @@ loop_hex:
 	inc %esi
 	shl $1, %eax
 	add (%esp, %esi, 4), %eax
+	inc %esi
+
 	mov %eax, (%ebp, %edi, 4)
 	inc %edi
-	inc %esi
-	jmp loop_hex
+	jmp bits_to_ascii
 print_integer:
 	add $48, %eax
 	jmp jump_back1
 print_letter:
 	sub $10, %eax
-	add $97, %eax
+	add $65, %eax
 	jmp jump_back1
 end_program:																# end of program
 	mov $4, %eax
